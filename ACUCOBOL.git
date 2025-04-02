@@ -875,59 +875,13 @@ KKKKKK     05 STATUS-AMPIO       PIC X(2) VALUE SPACES.
       *                          PARAMETROS-EMPRESA.
        PROCEDURE DIVISION. 
 
-
-
        COMIENZO-PROGRAMA.
       *     
            open output log.
-SGL   *    * Paso 1: Inicio del programa
-SGL   *     PERFORM GRABA-LOG USING "COMIENZO-PROGRAMA"
-SGL            
-SGL   *         * Paso 2: Utilización de FECHA-8-DIGITOS
-SGL   *         PERFORM GRABA-LOG USING "FECHA-8-DIGITOS"
-SGL   *         PERFORM FECHA-8-DIGITOS
-SGL            
-SGL   *         * Paso 3: Lectura de provincia
-SGL   *         PERFORM GRABA-LOG USING "LEE-PROV"
-SGL   *         PERFORM LEE-PROV
-SGL            
-SGL   *         * Paso 4: Confirmación
-SGL            PERFORM GRABA-LOG USING "CONFIRMA"
-SGL            PERFORM CONFIRMA
-SGL            
-SGL   *        * Paso 5: Otra ejecución de FECHA-8-DIGITOS
-SGL            PERFORM GRABA-LOG USING "FECHA-8-DIGITOS"
-SGL            PERFORM FECHA-8-DIGITOS
-SGL            
-SGL   *        * Paso 6: Pide importe entero
-SGL            PERFORM GRABA-LOG USING "PIDE-IMP-INT"
-SGL            PERFORM PIDE-IMP-INT
-SGL            
-SGL   *        * Paso 7: Actualiza nac. importe
-SGL            PERFORM GRABA-LOG USING "ACTUALIZO-NAC-IMP"
-SGL            PERFORM ACTUALIZO-NAC-IMP
-SGL            
-SGL   *        * Paso 8: Lee ampliación nac. importe
-SGL            PERFORM GRABA-LOG USING "LEE-AMP-NAC-IMP"
-SGL            PERFORM LEE-AMP-NAC-IMP
-SGL            
-SGL   *        * Paso 9: Pide datos correctos
-SGL            PERFORM GRABA-LOG USING "PIDE-DATOS-CORRECTOS"
-SGL            PERFORM PIDE-DATOS-CORRECTOS
-SGL            
-SGL   *        * Paso 10: Confirmación final
-SGL            PERFORM GRABA-LOG USING "CONFIRMA"
-SGL            PERFORM CONFIRMA
-SGL 
-SGL           CLOSE LOGFILE
-
-           
-ser   *     if deb = 1  
-ser   *        move "COMIENZO-PROGRAMA" to MENSAJE-LOG
-ser   *        write reg-log
-ser   *     end-if. 
-           PERFORM GRABA-LOG USING "FECHA-8-DIGITOS"
-SGL           
+ser        if deb = 1  
+ser           move "COMIENZO-PROGRAMA" to MENSAJE-LOG
+ser           write reg-log
+ser        end-if.
            MOVE "20250319" TO FECHA-SP.
            MOVE 18         TO CODIGO-CLIENTE.
            MOVE 19         TO COMPROBANTE-FACTURA.
@@ -937,15 +891,12 @@ SGL
 
       *    ***  RUTINAS DEL PROGRAMA  ***
       *         """"""""""""""""""""
-      **************************************************************    
+
        CONFIRMA.
-      **************************************************************
-ser   *     if deb = 1  
-ser   *        move "CONFIRMA" to MENSAJE-LOG
-ser   *        write reg-log
-ser   *     end-if.
-SGL					 PERFORM GRABA-LOG USING "COMIENZO-PROGRAMA"
-      
+ser        if deb = 1  
+ser           move "CONFIRMA" to MENSAJE-LOG
+ser           write reg-log
+ser        end-if.
            DISPLAY " Confirma? (" POSITION 0 LOW,
                    "S"            POSITION 0 HIGH,
                    "|"            POSITION 0 LOW BLINK,
@@ -975,15 +926,12 @@ ser        end-if.
            MOVE "S" TO RESPUESTA.
       *     PERFORM DISP-SPACES.
        SAL-CONFIRMACION.
-SGL   *************************PASO2*********************************************
+
        FECHA-8-DIGITOS.
-SGL   *************************************************************************** 
-ser   *     if deb = 1  
-ser   *        move "FECHA-8-DIGITOS" to MENSAJE-LOG
-ser   *        write reg-log
-ser   *     end-if.
-           
-SGL         PERFORM GRABA-LOG USING "FECHA-8-DIGITOS"
+ser        if deb = 1  
+ser           move "FECHA-8-DIGITOS" to MENSAJE-LOG
+ser           write reg-log
+ser        end-if.
 
            IF FECHA-8 = ZEROES
               MOVE ZEROES TO RFECHA-COMPLETA
@@ -993,9 +941,9 @@ SGL         PERFORM GRABA-LOG USING "FECHA-8-DIGITOS"
               ELSE
                 MOVE 20       TO CENTURIA.
        FIN-FECHA-8-DIGITOS.
-SGL   ***************************************************************************
            EXIT.
-SGL   ***************************************************************************
+
+
 280993 CALL-SYSTEM.
            CALL   "SYSTEM" USING COMANDO-SYSTEM.
            CANCEL "SYSTEM".
@@ -2873,15 +2821,12 @@ MCM        MOVE ZEROS TO BAND.
       -            "ARTIDA CORRESPONDIENTE !" LINE 24 BLINK BEEP,
                    GO TO P-COD-PROV.
 010704     MOVE NUMERO TO COD-PROV-VENCIM WK-DISTRIBUIDOR.
-           DISPLAY COD-PROV-ANT LINE 4 POSITION 47. 
-SGL   ***********************************************************************     
+           DISPLAY COD-PROV-ANT LINE 4 POSITION 47.
        LEE-PROV.
-SGL   ************************************************************************ 
-           PERFORM GRABA-LOG USING "LEE-PROV"
-ser   *        if deb = 1  
-ser   *        move "LEE-PROV" to MENSAJE-LOG
-ser   *        write reg-log
-ser   *     end-if.
+ser        if deb = 1  
+ser           move "LEE-PROV" to MENSAJE-LOG
+ser           write reg-log
+ser        end-if.
 
            READ PROV RECORD WITH NO LOCK;
                 INVALID KEY
@@ -3841,3 +3786,4 @@ MEL   * q tome el vencimiento cargado
 
 
        END PROGRAM.
+
