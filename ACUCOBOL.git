@@ -1,5 +1,5 @@
        IDENTIFICATION DIVISION.
-       PROGRAM-ID.    SMOVAMP-SVG.
+       PROGRAM-ID.    SMOV-AMP.
        AUTHOR.        DROGUERIA SUR.
        INSTALLATION.  VILLARINO 52. BAHIA BLANCA.
        DATE-WRITTEN.  SEPTIEMBRE 1999.
@@ -55,16 +55,6 @@
        INPUT-OUTPUT SECTION.
 
        FILE-CONTROL.
-            SELECT LOG ASSIGN TO PRINT, "/tmp/yo.txt",
-                  ORGANIZATION IS LINE SEQUENTIAL,
-                  ACCESS MODE  IS      SEQUENTIAL.
-
-
-MCM   *ENTRADA CUIDADO       
-mcm        SELECT ENTRADA ASSIGN TO RANDOM, FILE-ENTRADA,
-mcm               ORGANIZATION IS LINE SEQUENTIAL,
-mcm               ACCESS MODE  IS      SEQUENTIAL,
-mcm               FILE STATUS  IS STATUS-ENTRADA.
 
            SELECT AMP ASSIGN TO RANDOM,
                   "/USER/MAESTROS/STCK/AMP-N-01",
@@ -183,41 +173,6 @@ mcm               FILE STATUS  IS STATUS-ENTRADA.
 
        DATA DIVISION.
        FILE SECTION.
-      *      ***   DESCRIPCION DEL ARCHIVO "LOG"   ***
-      *            """""""""""""""""""""""""""""
-      
-       FD  LOG LABEL RECORD IS STANDARD.
-       01  REG-LOG.
-           05  MENSAJE-LOG            PIC X(200).
-       
-
-MCM    FD  ENTRADA LABEL RECORD IS STANDARD.
-  |    01  REG-ENTRADA.
-  |        05 TIPO-REG-SP                          PIC X.
-  |        05 FILLER                               PIC X.
-  |        05 RESTO-SP                             PIC X(33).
-  |        05 TIPO-REG-0-SP REDEFINES RESTO-SP.
-  |           10 FECHA-SP                          PIC X(08).                    
-  |           10 FILLER                            PIC X(01).
-  |           10 CODIGO-CLIENTE                    PIC 9(06).
-  |           10 FILLER                            PIC X(01).
-  |           10 COMPROBANTE-FACTURA               PIC 9(06).
-  |           10 FILLER                            PIC X(01).
-  |           10 TIPO-MOVIMIENTO                   PIC X(02).
-  |           10 FILLER                            PIC X(08).
-  |        05 TIPO-REG-1-SP REDEFINES RESTO-SP.
-  |           10 TROQUEL                           PIC 9(08).
-  |           10 FILLER                            PIC X.
-  |           10 CANT-UNIDADES                     PIC X(06).
-  |           10 FILLER                            PIC X.
-  |           10 LOTE                              PIC X(08).
-  |           10 FILLER                            PIC X.
-  |           10 VENCIMIENTO                       PIC 9(08).
-  |        05 TIPO-REG-2-SP REDEFINES RESTO-SP.
-  |           10 ITEM                              PIC 9(10).
-  |           10 FILLER                            PIC X.
-  |           10 CANTIDAD                          PIC 9(06). 
-MCM           10 FILLER                            PIC X(16). 
 
       *    ***  DESCRIPCION DEL ARCHIVO "AMP"  ***
       *         """""""""""""""""""""""""""""
@@ -576,7 +531,7 @@ KKKKKK     05 STATUS-AMPIO       PIC X(2) VALUE SPACES.
               88 EOF-VENCIM     VALUE "FF".
 180797     05 FILLER             PIC X(4) VALUE ",LO:".
            05 STATUS-LO          PIC X(2) VALUE SPACES.
-           05 STATUS-ENTRADA     PIC XX.
+
        01  LINK-CONT-LO.
            05 IMPRESION        PIC X.
            05 LINEASMAX        PIC 9(2) COMP-6.
@@ -850,13 +805,11 @@ KKKKKK     05 STATUS-AMPIO       PIC X(2) VALUE SPACES.
           10 ITEM-OBJETO2     PIC X(22) VALUE "/USER/OBJETOS/CUADRADO".
           10 ITEM-OBJETO3     PIC X(22) VALUE "/USER/OBJETOS/CONS-AMP".
           10 ITEM-OBJETO4     PIC X(22) VALUE "/USER/OBJETOS/CONT-ACC".
-       01  deb                    pic 9 value 1. 
-       01 AUXILIAR2               PIC 9.  
        01  OTROS-FILES.
            05 FILE-LO             PIC X(07)  VALUE "PRINTER".
 300393     05 FILE-TRANSF         PIC X(14)  VALUE SPACES.
 
-      * LINKAGE SECTION.
+       LINKAGE SECTION.
 
        77  KEY-PARAMETRO            PIC 9(02).
        77  ARTEFACTO                PIC X(07).
@@ -871,32 +824,113 @@ KKKKKK     05 STATUS-AMPIO       PIC X(2) VALUE SPACES.
       /    ***  D I V I S I O N   D E   P R O C E D I M I E N T O S  ***
       *         """""""""""""""""""""""""""""""""""""""""""""""""""
 
-      * PROCEDURE DIVISION USING KEY-PARAMETRO, ARTEFACTO, CLIENTE,
-      *                          PARAMETROS-EMPRESA.
-       PROCEDURE DIVISION. 
+       PROCEDURE DIVISION USING KEY-PARAMETRO, ARTEFACTO, CLIENTE,
+                                PARAMETROS-EMPRESA.
+
+       DECLARATIVES.
+       CONTROL-PERIFERICOS SECTION.
+           USE AFTER ERROR PROCEDURE ON AMP AID AIL PROV TRNAMP PEDIDO,
+280203     AMP-P, DIF-PROV, TRN-ESP, AMPIO,
+180797     FACPRV01, FCISPR, VENCIM.
+       CONTROL-PER.
+           IF STATUS-TRNAMP      = "94" OPEN OUTPUT TRNAMP,
+                                        CLOSE       TRNAMP,
+                                        OPEN I-O    TRNAMP      ELSE
+           IF STATUS-PEDIDO      = "94" OPEN OUTPUT PEDIDO,
+                                        CLOSE       PEDIDO,
+                                        OPEN I-O    PEDIDO      ELSE
+           IF STATUS-DIF-PROV    = "94" OPEN OUTPUT DIF-PROV
+                                        CLOSE       DIF-PROV,
+                                        OPEN I-O    DIF-PROV    ELSE
+270594     IF STATUS-TRN-ESP     = "94" OPEN OUTPUT TRN-ESP,
+                                        CLOSE       TRN-ESP,
+                                        OPEN I-O    TRN-ESP     ELSE
+060697     IF STATUS-AMP-P       = "94" OPEN OUTPUT AMP-P,
+                                        CLOSE       AMP-P,
+                                        OPEN I-O    AMP-P       ELSE
+280203     IF STATUS-AMPIO       = "94" OPEN OUTPUT AMPIO,
+                                        CLOSE       AMPIO,
+                                        OPEN I-O    AMPIO       ELSE
+
+180797     IF STATUS-FACPRV01    = "94" OPEN OUTPUT FACPRV01,
+                                        CLOSE FACPRV01,
+                                        OPEN I-O FACPRV01       ELSE
+           IF STATUS-VENCIM      = "94" OPEN OUTPUT VENCIM,
+                                        CLOSE       VENCIM,
+                                        OPEN I-O    VENCIM      ELSE
+180797     IF STATUS-FCISPR      = "94" OPEN OUTPUT FCISPR,
+                                        CLOSE FCISPR,
+                                        OPEN I-O FCISPR,
+310393*    IF STATUS-TRANSF      = "94" NEXT SENTENCE           ELSE
+           IF STATUS-AMP         = "99" OR
+              STATUS-AID         = "99" OR
+              STATUS-AIL         = "99" OR
+              STATUS-PROV        = "99" OR
+              STATUS-TRNAMP      = "99" OR
+              STATUS-PEDIDO      = "99" OR
+              STATUS-VENCIM      = "99" OR 
+              STATUS-DIF-PROV    = "99" OR
+270594        STATUS-TRN-ESP     = "99" OR
+060697        STATUS-AMP-P       = "99" OR
+180797        STATUS-FACPRV01    = "99" OR
+280203        STATUS-AMPIO       = "99" OR
+KKKKKK        STATUS-FCISPR      = "99",
+              DISPLAY "REGISTRO BLOQUEADO POR OTRO PROCESO !"
+                       LINE 24 REVERSE BLINK ERASE EOL,
+              ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
+              PERFORM DISP-SPACES                               ELSE
+           IF STATUS-TRNAMP      = "93" NEXT SENTENCE           ELSE
+           DISPLAY LINEA-STATUS LINE 24 REVERSE ERASE EOL,
+           ACCEPT RESPUESTA POSITION 0 PROMPT "¯" BLINK,
+           PERFORM DISP-SPACES,
+           IF STATUS-AMP         = "93" OR
+              STATUS-AID         = "93" OR
+              STATUS-AIL         = "93" OR
+              STATUS-PROV        = "93" OR
+              STATUS-PEDIDO      = "93" OR
+              STATUS-DIF-PROV    = "93" OR
+270594        STATUS-TRN-ESP     = "93" OR
+060697        STATUS-AMP-P       = "93" OR
+280203        STATUS-AMPIO       = "93" OR
+180797        STATUS-FACPRV01    = "93" OR
+KKKKKK        STATUS-FCISPR      = "93",
+              DISPLAY "HAY ARCHIVOS BLOQUEADOS POR OTROS PROCESOS !"
+                       LINE 24 REVERSE BLINK ERASE EOL,
+              ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW BLINK,
+              PERFORM DISP-SPACES,
+              GO TO EXIT-PROGRAM-DECL.
+           GO TO SALIDA-DECLARATIVO-1.
+
+       EXIT-PROGRAM-DECL.
+           EXIT PROGRAM.
+       STOP-RUN-DECL.
+           STOP RUN.
+
+       SALIDA-DECLARATIVO-1.
+
+       DECLARATIVO-LO SECTION.
+           USE AFTER STANDARD ERROR PROCEDURE ON LO.
+       CONTROL-LO.
+           DISPLAY "Controle el Estado de la Impresora y Pulse:{Enter} p
+      -            "ara Continuar ..." LINE 24 REVERSE BLINK ERASE EOL.
+           ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW.
+
+       DISP-SPACES.
+           IF SPOOLING DISPLAY "SPOOLING" LINE 24 LOW ERASE EOL ELSE
+211092                 DISPLAY "þùú"      LINE 24 LOW ERASE EOL.
+       SAL-DISP-SPACES.
+
+       END DECLARATIVES.
+
+       SECCION-1 SECTION 1.
 
        COMIENZO-PROGRAMA.
-      *     
-           open output log.
-ser        if deb = 1  
-ser           move "COMIENZO-PROGRAMA" to MENSAJE-LOG
-ser           write reg-log
-ser        end-if.
-           MOVE "20250319" TO FECHA-SP.
-           MOVE 18         TO CODIGO-CLIENTE.
-           MOVE 19         TO COMPROBANTE-FACTURA.
-           MOVE "12"       TO TIPO-MOVIMIENTO.  
-           
            GO TO SECCION-50.
 
       *    ***  RUTINAS DEL PROGRAMA  ***
       *         """"""""""""""""""""
 
        CONFIRMA.
-ser        if deb = 1  
-ser           move "CONFIRMA" to MENSAJE-LOG
-ser           write reg-log
-ser        end-if.
            DISPLAY " Confirma? (" POSITION 0 LOW,
                    "S"            POSITION 0 HIGH,
                    "|"            POSITION 0 LOW BLINK,
@@ -904,35 +938,23 @@ ser        end-if.
                    "/"            POSITION 0 LOW,
                    "N"            POSITION 0 HIGH,
                    ") "           POSITION 0 LOW ERASE EOL.
-           MOVE "S" TO RESPUESTA.
-MCM   *     ACCEPT RESPUESTA POSITION 0 PROMPT "*" BLINK NO BEEP;
-      *            ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
-      *     PERFORM DISP-SPACES.
+           ACCEPT RESPUESTA POSITION 0 PROMPT "*" BLINK NO BEEP;
+                  ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
+           PERFORM DISP-SPACES.
        SAL-CONFIRMA.
 
 110293 CONFIRMACION.
-ser        if deb = 1  
-ser           move "CONFIRMACION" to MENSAJE-LOG
-ser           write reg-log
-ser        end-if.
-
            DISPLAY " Confirma? (" POSITION 0 LOW,
                    "!"            POSITION 0 BLINK,
                    "/"            POSITION 0 LOW,
                    "N"            POSITION 0 HIGH,
                    ") "           POSITION 0 LOW ERASE EOL.
-      *     ACCEPT RESPUESTA POSITION 0 PROMPT "*" BLINK NO BEEP;
-      *            ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
-           MOVE "S" TO RESPUESTA.
-      *     PERFORM DISP-SPACES.
+           ACCEPT RESPUESTA POSITION 0 PROMPT "*" BLINK NO BEEP;
+                  ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
+           PERFORM DISP-SPACES.
        SAL-CONFIRMACION.
 
        FECHA-8-DIGITOS.
-ser        if deb = 1  
-ser           move "FECHA-8-DIGITOS" to MENSAJE-LOG
-ser           write reg-log
-ser        end-if.
-
            IF FECHA-8 = ZEROES
               MOVE ZEROES TO RFECHA-COMPLETA
            ELSE
@@ -980,7 +1002,7 @@ ser        end-if.
        SAL-CONTROLA-IMPRESORA.
 
        EJECUTA-BEEP.
-050198     DISPLAY " " LINE 24 POSITION 79 BEEP,
+050198     DISPLAY "" LINE 24 POSITION 79 BEEP,
                    "|" LINE 24 POSITION 79 BEEP,
                    "/" LINE 24 POSITION 79 BEEP,
                    "-" LINE 24 POSITION 79 BEEP,
@@ -989,10 +1011,9 @@ ser        end-if.
 
 
        CONTROL-NUMERO.
-          
-MCM   *       ACCEPT NUMERO LINE LIN POSITION POSI SIZE SIZ PROMPT "þ";
-      *            NO BEEP CONVERT;
-      *            ON EXCEPTION BAND MOVE ZEROES TO EXC.
+           ACCEPT NUMERO LINE LIN POSITION POSI SIZE SIZ PROMPT "þ";
+                  NO BEEP CONVERT;
+                  ON EXCEPTION BAND MOVE ZEROES TO EXC.
            IF BAND     = 98,
               IF LIN   = 24 DISPLAY "?" LINE LIN POSITION POSI BEEP,
                             GO TO CONTROL-NUMERO             ELSE
@@ -1006,7 +1027,7 @@ MCM   *       ACCEPT NUMERO LINE LIN POSITION POSI SIZE SIZ PROMPT "þ";
                    COMPUTE EXC = SIZ - 12,
                    INSPECT NUMERO TALLYING EXC FOR LEADING ZEROES,
                    IF EXC > ZEROES DISPLAY SPACES POSITION 0 SIZE EXC.
-      *     IF LIN NOT = 24 PERFORM DISP-SPACES.
+           IF LIN NOT = 24 PERFORM DISP-SPACES.
        SAL-CONTROL-NUMERO.
 
        09-RUT-CLAVE.
@@ -1275,15 +1296,13 @@ IVA19                    ( AUXILIAR - INTERMEDIO ) * IVA-WK.
                DISPLAY  "Ingres¢ un vencimiento inferior a 7 MESES "
                         LINE 24 POSITION 1 ERASE EOL,
                         " VERIFIQUE !!! " POSITION 0,
-      *         ACCEPT RESPUESTA POSITION 0.
-                MOVE 0 TO RESPUESTA.
+               ACCEPT RESPUESTA POSITION 0.
 
            IF MESES > 48
                DISPLAY  "Ingres¢ un vencimiento superior a 4 A¥OS"
                         LINE 24 POSITION 1 ERASE EOL,
                         " VERIFIQUE !!! " POSITION 0,
-      *         ACCEPT RESPUESTA POSITION 0.
-                MOVE 0 TO RESPUESTA.
+               ACCEPT RESPUESTA POSITION 0.
        FIN-CONTROLAR-VENCIM.
 
 
@@ -1324,11 +1343,9 @@ KKKKKK     UNLOCK FCISPR.
                                       LINE    24 BLINK REVERSE,
                    DESCRIPCION-PEDIDO POSITION 0 LOW,
                    " (Dado de Baja) " POSITION 0 LOW ERASE EOL,
-MCM   *     ACCEPT RESPUESTA POSITION 0 PROMPT "¯" BLINK;
-      *            ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
-           MOVE "S" TO RESPUESTA.
-      *     PERFORM DISP-SPACES.
-      * GRABAR ERROR
+           ACCEPT RESPUESTA POSITION 0 PROMPT "¯" BLINK;
+                  ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
+           PERFORM DISP-SPACES.
            IF NEGATIVO        GO TO PIDE-ACCESO.
            IF RESPUESTA = "-" GO TO RASTREA-ANTERIOR.
            GO TO LEE-PEDIDO.
@@ -1342,20 +1359,16 @@ MCM   *     ACCEPT RESPUESTA POSITION 0 PROMPT "¯" BLINK;
                    "Enter"      POSITION 0 LOW REVERSE,
                    "}:Contin£a con el Siguiente)"
                                 POSITION 0 LOW ERASE EOL.
-      *CUIDADO
-MCM        move CODIGO-CLIENTE to LIN-LAB-AID.
-
-      *     ACCEPT LIN-LAB-AID LINE 19 POSITION 3 PROMPT "x" ECHO NO BEEP
-      *            ON EXCEPTION EXC GO TO PIDE-ACCESO.
-      *     PERFORM DISP-SPACES.
+           ACCEPT LIN-LAB-AID LINE 19 POSITION 3 PROMPT "x" ECHO NO BEEP
+                  ON EXCEPTION EXC GO TO PIDE-ACCESO.
+           PERFORM DISP-SPACES.
            MOVE COD-PROV TO COD-LAB-AID.
            IF LIN-LAB-AID = SPACES GO TO LEE-SIG-AID.
        POSICIONA-CLAVE-AID-LAB.
            START AID KEY IS NOT < CLAVE-AID-LABORATORIO;
                  INVALID KEY
                  DISPLAY "NO EXISTE TAL PRODUCTO ! " LINE 24 BLINK,
-      *           ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
-                 MOVE 0 TO RESPUESTA,
+                 ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
                  GO TO PIDE-ACCESO.
            GO TO LEE-SIG-AID.
        PIDE-TROQUEL.
@@ -1366,11 +1379,9 @@ MCM        move CODIGO-CLIENTE to LIN-LAB-AID.
                    "Enter" POSITION 0 LOW REVERSE,
                    "}:Contin£a con el Siguiente)"
                            POSITION 0 LOW ERASE EOL.
-MCM        MOVE TROQUEL TO 09-INPUT.
-                
-      *     ACCEPT 09-INPUT LINE 19 POSITION 1 SIZE 8 PROMPT "x";
-      *            ECHO NO BEEP ON EXCEPTION EXC GO TO PIDE-ACCESO.
-      *     PERFORM DISP-SPACES.
+           ACCEPT 09-INPUT LINE 19 POSITION 1 SIZE 8 PROMPT "x";
+                  ECHO NO BEEP ON EXCEPTION EXC GO TO PIDE-ACCESO.
+           PERFORM DISP-SPACES.
            IF 09-INPUT = SPACES GO TO LEE-SIG-AID.
            PERFORM 09-RUT-TROQUEL.
            DISPLAY TROQUEL-AID LINE 19 POSITION 1 REVERSE.
@@ -1379,8 +1390,7 @@ MCM        MOVE TROQUEL TO 09-INPUT.
                  INVALID KEY
                  DISPLAY "NO EXISTE UN CODIGO PARECIDO ! "
                           LINE 24 BLINK,
-      *           ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
-                 move 0 to respuesta,
+                 ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
                  GO TO PIDE-ACCESO.
            GO TO LEE-SIG-AID.
        PIDE-CLAVE.
@@ -1391,10 +1401,9 @@ MCM        MOVE TROQUEL TO 09-INPUT.
                    "Enter" POSITION 0 LOW REVERSE,
                    "}:Contin£a con el Siguiente)"
                            POSITION 0 LOW ERASE EOL.
-MCM        MOVE "PEPE " TO 09-INPUT
-      *      ACCEPT 09-INPUT LINE 19 POSITION 10 PROMPT "x" ECHO NO BEEP;
-      *            ON EXCEPTION EXC GO TO PIDE-ACCESO.
-      *     PERFORM DISP-SPACES.
+           ACCEPT 09-INPUT LINE 19 POSITION 10 PROMPT "x" ECHO NO BEEP;
+                  ON EXCEPTION EXC GO TO PIDE-ACCESO.
+           PERFORM DISP-SPACES.
            IF 09-INPUT = SPACES GO TO LEE-SIG-AID.
            PERFORM 09-RUT-CLAVE.
            MOVE 09-SALIDA4 TO CLAVE-ALFAN-AID.
@@ -1403,8 +1412,7 @@ MCM        MOVE "PEPE " TO 09-INPUT
                  INVALID KEY
                  DISPLAY "NO EXISTE UN PRODUCTO SIMILAR ! "
                           LINE 24 BLINK ERASE EOL,
-      *           ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
-                 MOVE ZERO TO RESPUESTA,
+                 ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
                  GO TO PIDE-ACCESO.
            GO TO LEE-SIG-AID.
        PIDE-NOMBRE.
@@ -1417,24 +1425,23 @@ MCM        MOVE "PEPE " TO 09-INPUT
                    "Enter"        POSITION  0 LOW REVERSE,
                    "}:Contin£a con el Siguiente)"
                                   POSITION  0 LOW ERASE EOL.
-MOVE       MOVE "PEPE" TO DESCRIPCION-AIL                                  
-      *      ACCEPT DESCRIPCION-AIL LINE 19 POSITION 10 PROMPT "x" ECHO;
-      *            NO BEEP ON EXCEPTION EXC GO TO PIDE-ACCESO.
-      *     PERFORM DISP-SPACES.
+           ACCEPT DESCRIPCION-AIL LINE 19 POSITION 10 PROMPT "x" ECHO;
+                  NO BEEP ON EXCEPTION EXC GO TO PIDE-ACCESO.
+           PERFORM DISP-SPACES.
            IF DESCRIPCION-AIL = SPACES     GO TO LEE-SIG-AIL.
        POSICIONA-CLAVE-AIL-LAB-DESC.
            START AIL KEY IS NOT < CLAVE-AIL-LAB-DESC;
                  INVALID KEY
                  DISPLAY "NO EXISTE TAL PRODUCTO PARA ESE PROVEEDOR ! "
                           LINE 24 BLINK ERASE EOL,
-      *           ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
+                 ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
                  GO TO PIDE-ACCESO.
        LEE-SIG-AIL.
            READ AIL NEXT RECORD WITH NO LOCK;
                 AT END
                 DISPLAY "NO HAY MAS PRODUCTOS ! "
                          LINE 24 BLINK ERASE EOL,
-      *          ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
+                ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
                 GO TO PIDE-ACCESO.
            MOVE POS-REL-AIL TO CLAVE-AMP.
            GO TO LEE-AMP.
@@ -1443,7 +1450,7 @@ MOVE       MOVE "PEPE" TO DESCRIPCION-AIL
                 AT END
                 DISPLAY "NO HAY MAS PRODUCTOS ! "
                          LINE 24 BLINK ERASE EOL,
-      *          ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
+                ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
                 GO TO PIDE-ACCESO.
            IF STATUS-AID = "99" GO TO LEE-SIG-AID.
            MOVE POS-REL-AID TO CLAVE-AMP.
@@ -1452,24 +1459,21 @@ MOVE       MOVE "PEPE" TO DESCRIPCION-AIL
                 INVALID KEY
                 DISPLAY "NO EXISTE ESE PRODUCTO ! "
                          LINE 24 BLINK ERASE EOL,
-MCM   *          GRABAR ERROR
-                 CONTINUE.                   
-      *          ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
-      *          GO TO PIDE-ACCESO.
+                ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
+                GO TO PIDE-ACCESO.
            IF STATUS-AMP = "99" GO TO LEE-AMP.
            
       * A pedido de Enrique se saltean los productos con marca "N".
 240504     IF IND-CONTROL-AMP = "N" 
               DISPLAY DESCRIPCION-AMP LINE 19 POSITION 9,
-              DISPLAY " PRODUCTO DADO DE BAJA  ! No se permite movimient" 
+              DISPLAY " PRODUCTO DADO DE BAJA  ! No se permite movimient 
       -               "o de productos ... "
                       LINE 24 POSITION 01 REVERSE BLINK,
-MCM   *         ACCEPT RESPUESTA POSITION 0,
-MCM   *        IF ACCESO = "C" OR ACCESO = "L" OR ACCESO = "N"
-  |   *           GO TO LEE-SIG-AID
-  |   *        ELSE IF ACCESO = "P" 
-  |   *           GO TO LEE-SIG-AIL.
-  |        .  
+              ACCEPT RESPUESTA POSITION 0,
+              IF ACCESO = "C" OR ACCESO = "L" OR ACCESO = "N"
+                 GO TO LEE-SIG-AID
+              ELSE IF ACCESO = "P" 
+                 GO TO LEE-SIG-AIL.
 
        LEE-AMPIO.
            IF SUCURSAL-ANT NOT = 04 GO TO VIS-AMP.
@@ -1548,9 +1552,8 @@ KKKKKK     READ FCISPR RECORD WITH NO LOCK;
            DISPLAY "}, seg£n Pedido= Anterior:{" POSITION 0 LOW,
                    "-"                           POSITION 0 HIGH BLINK.
            DISPLAY "})"                ERASE EOL POSITION 0 LOW.
-MCM        MOVE "S" TO RESPUESTA.
-      *     ACCEPT RESPUESTA LINE 24 POSITION 10 PROMPT "*";
-      *            NO BEEP BLINK ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
+           ACCEPT RESPUESTA LINE 24 POSITION 10 PROMPT "*";
+                  NO BEEP BLINK ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
 ***********PERFORM DISP-SPACES.
            IF NEGATIVO        GO TO PIDE-ACCESO.
            IF RESPUESTA = "-",
@@ -1586,9 +1589,8 @@ MCM        MOVE "S" TO RESPUESTA.
                    "}úContin£a:"          POSITION 0 LOW,
                    "Enter"                POSITION 0 HIGH,
                    " "                    POSITION 0 LOW ERASE EOL.
-      *    ACCEPT RESPUESTA POSITION 0 PROMPT "?" BLINK;
-      *            ON EXCEPTION EXC GO TO VIS-AMP.
-MCM        MOVE "S" TO RESPUESTA. 
+           ACCEPT RESPUESTA POSITION 0 PROMPT "?" BLINK;
+                  ON EXCEPTION EXC GO TO VIS-AMP.
 290595     IF NOT SEGURISIMO       GO TO PIDE-CANTIDAD.
 
 
@@ -1608,8 +1610,7 @@ MCM        MOVE "S" TO RESPUESTA.
 180497             "Enter"                POSITION 0 LOW REVERSE,
                    "}ú"                   POSITION 0 LOW ERASE EOL.
            IF RESPUESTA NOT = "P"
-      *    ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW BLINK NO BEEP.
-MCM        MOVE "P" TO RESPUESTA.
+           ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW BLINK NO BEEP.
        PIDE-CANTIDAD.
            DISPLAY "Ingrese la Cantidad del Producto ..."
                     LINE 24 LOW BLINK ERASE EOL.
@@ -1629,11 +1630,9 @@ MCM        MOVE "P" TO RESPUESTA.
                    "|"                      POSITION 0 LOW BLINK,
                    "0"                      POSITION 0 HIGH,
                    "})"                     POSITION 0 LOW ERASE EOL.
-      *    ACCEPT RESPUESTA LINE 24 POSITION 16 PROMPT "*" NO BEEP BLINK
-      *           ON EXCEPTION EXC GO TO PIDE-ACCESO.
-           MOVE "S" TO RESPUESTA.
-      *     PERFORM DISP-SPACES.
-           display "1" accept respuesta.
+           ACCEPT RESPUESTA LINE 24 POSITION 16 PROMPT "*" NO BEEP BLINK
+                  ON EXCEPTION EXC GO TO PIDE-ACCESO.
+           PERFORM DISP-SPACES.
            IF RESPUESTA = "C" GO TO SAL-PIDE-PRODUCTO.
            IF RESPUESTA = "B" MOVE ZEROES TO PENDIENTE-SUC(A-SUCURSAL),
                               PERFORM REGRABA-AMP,
@@ -1659,8 +1658,7 @@ MCM        MOVE "P" TO RESPUESTA.
 040504     IF NUMERO = ZEROES  
               DISPLAY "Ingrese Cantidad Mayor a cero ..."
                        LINE 24 LOW BLINK ERASE EOL,
-      *                ACCEPT RESPUESTA,
-                      MOVE 0 TO RESPUESTA,
+                       ACCEPT RESPUESTA,
               GO TO  ENTRA-CANTIDAD.
               
            MOVE NUMERO       TO CANTIDAD-TRN.
@@ -1699,13 +1697,10 @@ kkkkkk         DISPLAY NUM-EDIT-2 LINE 21 POSITION 15,
        P-COSTO-PRECIO.
            MOVE "211510" TO LIN-POS-SIZ.
            PERFORM CONTROL-NUMERO.
-MCM   *      MOVE 0 TO NUMERO.
-MCM   *     MOVE 0 TO BAND.
-           
 221092     IF BAND = 10 PERFORM ENTRA-NUEVO-NUMERO,
 221092                  GO TO PIDE-COSTO-PRECIO.
            IF BAND NOT = ZEROES GO TO PIDE-CANTIDAD.
-MCM   *    IF NUMERO = ZEROES AND POR-BULTO GO TO PIDE-COSTO-PRECIO.
+270398     IF NUMERO = ZEROES AND POR-BULTO GO TO PIDE-COSTO-PRECIO.
            IF NUMERO   = ZEROES,
               IF COEF-S-PRECIO < 1,
                  MOVE PRECIO-PUBLICO-AMP TO NUMERO-DEC ELSE
@@ -1732,12 +1727,10 @@ MCM   *    IF NUMERO = ZEROES AND POR-BULTO GO TO PIDE-COSTO-PRECIO.
 080192            COSTO-PRECIO-TRN NOT = PRECIO-PUBLICO-AMP),
 080192            DISPLAY "EL COSTO/PRECIO ES DISTINTO AL CALCULADO !"
 030292                     LINE 24 BLINK,
-MCM   *GRABAR ERROR
-MCM   *         PERFORM CONFIRMACION,
-110293*            IF NOT SEGURISIMO
-      *                   DISPLAY "ÄÄÄÄÄÄÄÄÄÄ" LINE 22 POSITION 15 LOW
-      *                   GO TO PIDE-COSTO-PRECIO.
-MCM             .
+110293            PERFORM CONFIRMACION,
+110293            IF NOT SEGURISIMO
+                         DISPLAY "ÄÄÄÄÄÄÄÄÄÄ" LINE 22 POSITION 15 LOW
+                         GO TO PIDE-COSTO-PRECIO.
 271198     IF MEDICAMENTO-AMP
                COMPUTE AUX-DIF ROUNDED =
                  (((PRECIO-PUBLICO-AMP * COEF-PRECIO-REPOSICION)
@@ -1751,31 +1744,27 @@ MCM             .
                            " % ",
                    PERFORM EJECUTA-BEEP 6 TIMES,
                    DISPLAY " " LINE 24 POSITION 45,
- MCM  *           PERFORM CONFIRMACION,
- MCM  *             IF NOT SEGURISIMO GO TO PIDE-COSTO-PRECIO.
-               .
+                   PERFORM CONFIRMACION,
+                   IF NOT SEGURISIMO GO TO PIDE-COSTO-PRECIO.
 
            IF COSTO-PRECIO-TRN NOT = ZEROES,
            IF PRECIO-PUBLICO-AMP > ZEROES AND
               (COEF-S-PRECIO NOT < 1      AND
                COSTO-PRECIO-TRN  > PRECIO-PUBLICO-AMP),
                DISPLAY "EL COSTO NO PUEDE SER MAYOR QUE EL PRECIO AL PUB
-      -                "LICO !" LINE 24 BLINK BEEP ERASE EOL,           "
-MCM   *GRABAR ERROR      
-110293*         PERFORM CONFIRMACION,
-110293*         IF NOT SEGURISIMO
-      *                   DISPLAY "ÄÄÄÄÄÄÄÄÄÄ" LINE 22 POSITION 15 LOW
-      *                   GO TO P-COSTO-PRECIO ELSE
-110293*                   NEXT SENTENCE        ELSE
+      -                "LICO !" LINE 24 BLINK BEEP ERASE EOL,
+110293         PERFORM CONFIRMACION,
+110293         IF NOT SEGURISIMO
+                         DISPLAY "ÄÄÄÄÄÄÄÄÄÄ" LINE 22 POSITION 15 LOW
+                         GO TO P-COSTO-PRECIO ELSE
+110293                   NEXT SENTENCE        ELSE
            IF COSTO-ULTIMO-AMP  > ZEROES AND
               (COEF-S-PRECIO    < 1      AND
                COSTO-PRECIO-TRN < COSTO-ULTIMO-AMP),
                DISPLAY "EL PRECIO AL PUBLICO NO PUEDE SER MENOR QUE EL U
-      -                "LTIMO COSTO !" LINE 24 BLINK BEEP ERASE EOL,    "
-MCM   *GRABAR ERROR      
-      *         PERFORM CONFIRMACION,
-110293*         IF NOT SEGURISIMO GO TO P-COSTO-PRECIO.
-           .
+      -                "LTIMO COSTO !" LINE 24 BLINK BEEP ERASE EOL,
+110293         PERFORM CONFIRMACION,
+110293         IF NOT SEGURISIMO GO TO P-COSTO-PRECIO.
 270797     IF NOT (TRN = "FC" OR TRN = "AF")
               MOVE    "N" TO IVA-RECEPCION,
               DISPLAY "ú" LINE 21 POSITION 25,
@@ -1785,9 +1774,8 @@ MCM   *GRABAR ERROR
                  MOVE "N" TO IVA-RECEP-ANT.
            DISPLAY "Este Valor Incluye el IVA ? (S|0/N)"
                     LINE 24 ERASE EOL.
-      *    ACCEPT IVA-RECEPCION LINE 21 POSITION 25 PROMPT "x" ECHO;
-      *           NO BEEP ON EXCEPTION EXC GO TO PIDE-COSTO-PRECIO.
-      *    MOVE SPACES TO  IVA-RECEPCION.
+           ACCEPT IVA-RECEPCION LINE 21 POSITION 25 PROMPT "x" ECHO;
+                  NO BEEP ON EXCEPTION EXC GO TO PIDE-COSTO-PRECIO.
            IF IVA-RECEPCION = " "
                MOVE IVA-RECEP-ANT TO IVA-RECEPCION.
            IF IVA-RECEPCION = "0"
@@ -1806,9 +1794,7 @@ MCM   *GRABAR ERROR
        P-CONTROL.
            MOVE "213011" TO LIN-POS-SIZ.
            DISPLAY "ÄÄÄÄÄÄÄÄÄÄ" LINE 22 POSITION 30 LOW.
-      *    PERFORM CONTROL-NUMERO.
-           MOVE ZERO TO NUMERO.
-           MOVE ZERO TO BAND.
+           PERFORM CONTROL-NUMERO.
 221092     IF BAND = 10 PERFORM ENTRA-NUEVO-NUMERO,
 221092                  GO TO PIDE-CONTROL.
            IF BAND NOT = ZEROES GO TO PIDE-COSTO-PRECIO.
@@ -1871,9 +1857,8 @@ kkkkkk            GO TO PIDE-CANTIDAD
            MOVE NUMERO TO FECHA, FECHA-VTO-EDIT.
            IF (MES < 01 OR MES > 12),
                DISPLAY "VENCIMIENTO INCORRECTO !" LINE 24 BLINK BEEP,
-MCM   *GRABAR ERROR               
-      *         GO TO P-VENCIMIENTO.
-MCM        .
+               GO TO P-VENCIMIENTO.
+
            IF FECHA NOT = 1250 AND FECHA NOT = ZEROES
 
                PERFORM CONTROLAR-VENCIM THRU FIN-CONTROLAR-VENCIM.
@@ -1890,10 +1875,9 @@ MCM        .
                    "Enter"             POSITION 0 LOW REVERSE,
                    "}:No Corresponde)" POSITION 0 LOW ERASE EOL.
        P-PARTIDA.
-13069 *    ACCEPT PARTIDA LINE 21 POSITION 68 PROMPT "þ" NO BEEP ECHO;
-      *           ON EXCEPTION EXC GO TO PIDE-VENCIMIENTO.
-           MOVE SPACES TO PARTIDA.
-      *     PERFORM DISP-SPACES.
+130697     ACCEPT PARTIDA LINE 21 POSITION 68 PROMPT "þ" NO BEEP ECHO;
+                  ON EXCEPTION EXC GO TO PIDE-VENCIMIENTO.
+           PERFORM DISP-SPACES.
       ********** Partida cero y es "S" o "E" o "+1" ....
 KKKKKK     IF PARTIDA NOT > SPACES
 211092        IF ( TRN NOT < "S0" AND TRN NOT > "S9") OR
@@ -1902,9 +1886,7 @@ KKKKKK     IF PARTIDA NOT > SPACES
                    MOVE "        " TO PARTIDA ELSE
                    MOVE "Sin Part" TO PARTIDA.
 261193     IF NOT (TRN = "FC" AND (PERFUMERIA-AMP OR ACCESORIO-AMP)),
-      *             GO TO PIDE-DATOS-CORRECTOS.
-      *GRABAR ERROR
-           .
+                   GO TO PIDE-DATOS-CORRECTOS.
 261193 PIDE-DESCUENTO.
 250194     DISPLAY "Ingrese el Porcentaje de Descuento Inclu¡do ..."
                                           LINE 24 LOW BLINK ERASE EOL,
@@ -1912,9 +1894,7 @@ KKKKKK     IF PARTIDA NOT > SPACES
 090501             "Nac/Imp(I): ù " LINE 22 POSITION 43 LOW,
                    "Des.Glob :ùùù,ùùú% " LINE 22 POSITION 60 LOW.
 250194     MOVE "223206" TO LIN-POS-SIZ.
-      *     PERFORM CONTROL-NUMERO.
-MCM        MOVE 0 TO BAND.
-           MOVE 0 TO NUMERO.
+           PERFORM CONTROL-NUMERO.
            IF BAND NOT = ZEROES,
 130697        DISPLAY ALL "Ä" LINE 22 POSITION 27 SIZE 52 LOW,
 060697        GO TO PIDE-PARTIDA.
@@ -1946,28 +1926,21 @@ MCM        MOVE 0 TO BAND.
       **** tipeo un enter y el numero queda en cero.
       ***********************************************************************
 250194 PIDE-IMP-INT.
-ser        if deb = 1  
-ser           move " PIDE-IMP-INT" to MENSAJE-LOG
-ser           write reg-log
-ser        end-if.
-
            MOVE SPACES TO NAC-IMP.
-090501     DISPLAY "Ingrese la marca de Nacional (Enter/N) o Importado ("
+090501     DISPLAY "Ingrese la marca de Nacional (Enter/N) o Importado (
       -            "I)    ..." LINE 24 LOW BLINK ERASE EOL.
            DISPLAY ADUANA-AMP LINE 22 POSITION 55.
            MOVE "225501" TO LIN-POS-SIZ.
-MCM        MOVE "N"      TO NAC-IMP.
-MCM   *PREGUNTAR SI ES NACIONAL O IMPORTADO LA MARCA????
-      * CONSULTAR      
-09050 *     ACCEPT NAC-IMP  LINE 22 POSITION 55  NO BEEP ECHO;
-      *            ON EXCEPTION EXC GO TO PIDE-DESCUENTO.
-      *     PERFORM DISP-SPACES.
+           
+090501     ACCEPT NAC-IMP  LINE 22 POSITION 55  NO BEEP ECHO;
+                  ON EXCEPTION EXC GO TO PIDE-DESCUENTO.
+           PERFORM DISP-SPACES.
            IF NAC-IMP NOT = "I" AND NAC-IMP NOT = "N"
               GO TO PIDE-IMP-INT.
 
       *    PERFORM CONTROL-NUMERO.
       *    IF BAND NOT = ZEROES GO TO PIDE-DESCUENTO.
-MCM        MOVE ZEROES TO NUMERO.
+090501     MOVE ZEROES TO NUMERO.
            IF   NUMERO-DEC = ZEROES,
 @@@@@@          IF INT-AMP = 1 MOVE 7,53 TO NUMERO-DEC ELSE
 100394*         DISPLAY "+%" LINE 22 POSITION 57 HIGH  ELSE
@@ -1979,32 +1952,16 @@ MCM        MOVE ZEROES TO NUMERO.
       *    DISPLAY ZNUM-PORC LINE LIN POSITION POS.
       *
            IF NAC-IMP = SPACES    MOVE "N" TO NAC-IMP.
-MCM   *     IF ADUANA-AMP = NAC-IMP GO TO PIDE-DATOS-CORRECTOS.
+           IF ADUANA-AMP = NAC-IMP GO TO PIDE-DATOS-CORRECTOS.
            MOVE NAC-IMP TO ADUANA-AMP.
        ACTUALIZO-NAC-IMP.
-ser        if deb = 1  
-ser           move " ACTUALIZO-NAC-IMP" to MENSAJE-LOG
-ser           write reg-log
-ser        end-if.
            REWRITE REG-AMP.
            IF STATUS-AMP = "99" GO TO ACTUALIZO-NAC-IMP.
        LEE-AMP-NAC-IMP.
-ser        if deb = 1  
-ser           move " LEE-AMP-NAC-IMP" to MENSAJE-LOG
-ser           write reg-log
-ser        end-if.
-
-           READ AMP RECORD 
-      *     INVALID KEY GO TO PIDE-CODIGO.
-      *GRABAR ERROR
-MCM        INVALID KEY CONTINUE.
+           READ AMP RECORD INVALID KEY GO TO PIDE-CODIGO.
            IF STATUS-AMP = "99"        GO TO LEE-AMP-NAC-IMP.
       ******************* Fin de la modificaci¢n del 09/05/01 **************
        PIDE-DATOS-CORRECTOS.
-ser        if deb = 1  
-ser           move " PIDE-DATOS-CORRECTOS" to MENSAJE-LOG
-ser           write reg-log
-ser        end-if.
            DISPLAY "Datos Correctos ?   (" LINE    24 LOW,
                    "S"                     POSITION 0 HIGH,
                    "|"                     POSITION 0 LOW BLINK,
@@ -2015,9 +1972,8 @@ ser        end-if.
 181094                                     POSITION 0 LOW,
 181094             "!"                     POSITION 0 BLINK,
 181094             "})"                    POSITION 0 LOW ERASE EOL.
-      *     ACCEPT RESPUESTA LINE 24 POSITION 19 PROMPT "*" BLINK NO BEEP
-      *            ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
-           MOVE "S" TO RESPUESTA.
+           ACCEPT RESPUESTA LINE 24 POSITION 19 PROMPT "*" BLINK NO BEEP
+                  ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
            IF NEGATIVO,
 080294        IF (TRN = "FC" AND (PERFUMERIA-AMP OR ACCESORIO-AMP)),
                              GO TO PIDE-IMP-INT ELSE
@@ -2027,7 +1983,6 @@ ser        end-if.
               DISPLAY NUM-EDIT-2 LINE 21 POSITION 31 BLINK,
                       NUM-EDIT-3 LINE 21 POSITION 57 BLINK ELSE
            IF NOT AFIRMATIVO GO TO PIDE-DATOS-CORRECTOS.
-    
            IF TRN = "FC" OR TRN = "AF"
 210797         READ FACPRV01 RECORD;
                     INVALID KEY
@@ -2035,28 +1990,19 @@ ser        end-if.
             IF TRN = "FC" OR TRN = "AF"
                PERFORM CALCULA-TOTAL-FACTURA THRU
                                      SAL-CALCULA-TOTAL-FACTURA.
-           display "2" accept respuesta.
-           
            IF TRN NOT = "FC" GO TO SAL-PIDE-PRODUCTO.
            MOVE 5 TO IND.
        CONTROLA-VENCIMIENTO.
-ser        if deb = 1  
-ser           move "CONTROLA-VENCIMIENTO" to MENSAJE-LOG
-ser           write reg-log
-ser        end-if.
            IF VENCIMIENTO-PARTIDA(IND) = ZEROES,
-              IF IND = 1 display "3" accept respuesta
-           
-                         GO TO SAL-PIDE-PRODUCTO ELSE
+              IF IND = 1 GO TO SAL-PIDE-PRODUCTO ELSE
                          SUBTRACT 1 FROM IND,
                          GO TO CONTROLA-VENCIMIENTO.
- #2000     MOVE VENCIMIENTO-PARTIDA(IND) TO ANO-MESC.
+##2000     MOVE VENCIMIENTO-PARTIDA(IND) TO ANO-MESC.
 ##2000     MOVE 01                       TO DIAC.
 ##2000     PERFORM FECHA-8-DIGITOS THRU FIN-FECHA-8-DIGITOS.
            MOVE RFECHA-COMPLETA          TO FECHA-ANT-8.
 ##2000     MOVE VENCIMIENTO-TRN          TO ANO-MESC.
 ##2000     MOVE 01                       TO DIAC.
-           
 ##2000     PERFORM FECHA-8-DIGITOS THRU FIN-FECHA-8-DIGITOS.
 ##2000     IF (VENCIMIENTO-PARTIDA(IND) NOT = 5012 AND
 ##2000         FECHA-ANT-8 > RFECHA-COMPLETA),
@@ -2067,14 +2013,11 @@ ser        end-if.
 110293         PERFORM CONFIRMACION,
 060697         IF NOT SEGURISIMO GO TO PIDE-PARTIDA.
        SAL-PIDE-PRODUCTO.
-           display "ddddd" accept respuesta.
 261193     IF (TRN = "FC" AND (PERFUMERIA-AMP OR ACCESORIO-AMP)),
 130697         DISPLAY ALL "Ä" LINE 22 POSITION 2 SIZE 77 LOW.
-           DISPLAY "Un momento por favor ..." LINE 24 BLINK ERASE EOL.  "
-      
-      *  mariela es re bonita.
-           display "aca" accept respuesta.     
-    
+           DISPLAY "Un momento por favor ..." LINE 24 BLINK ERASE EOL.
+
+
 
 
        ENTRA-NUEVO-NUMERO SECTION 20.
@@ -2082,7 +2025,6 @@ ser        end-if.
            DISPLAY "Ingrese el Nuevo Numero del Comprobante ..."
                     LINE 24 LOW BLINK ERASE EOL.
            MOVE "064706" TO LIN-POS-SIZ.
-     
            PERFORM CONTROL-NUMERO.
            IF BAND NOT = ZEROES,
               DISPLAY NRO-COMP-ANT LINE LIN POSITION POSI REVERSE,
@@ -2115,29 +2057,22 @@ ser        end-if.
 
        DISP-MENSAJE-ERROR SECTION 30.
        DISP-MEN-ERROR.
-
-           
            IF INTERMEDIO < ZEROES,
               MOVE ZEROES TO INTERMEDIO,
               DISPLAY MENSAJE-ERROR LINE 24 HIGH,
               PERFORM CONFIRMA,
-
               IF NOT AFIRMATIVO,
                  DISPLAY " Transacci¢n Ignorada !"
                           LINE 24 BLINK BEEP,
                  GO TO DETERMINA-RUTINA ELSE
-      
-011194        DISPLAY "Clave:" LINE 24 REVERSE ERASE EOL,               "
-
-      *        ACCEPT NUMERO POSITION 0 OFF NO BEEP,
-MCM           MOVE 123456 TO NUMERO, 
-      *        PERFORM DISP-SPACES,
+011194        DISPLAY "Clave:" LINE 24 REVERSE ERASE EOL,
+              ACCEPT NUMERO POSITION 0 OFF NO BEEP,
+              PERFORM DISP-SPACES,
 211294********ACCEPT FECHA FROM DATE, COMPUTE AUXILIAR1 = (ANO * FECHA),
 211294********IF NUMERO NOT = AUXILIAR1,
 211294        IF NUMERO NOT = 123456,
                  MOVE -1 TO INTERMEDIO,
                  GO TO DISP-MEN-ERROR.
-                
        SAL-DISP-MENSAJE-ERROR.
 
        ARMA-TRNAMP SECTION 30.
@@ -2205,11 +2140,10 @@ KKKKKK     MOVE LOW-VALUES           TO ITEM-FCISPR(IND).
                NRO-PART-AMP-P(IND) = PARTIDA) NEXT SENTENCE         ELSE
                IF IND NOT = 20, ADD 1 TO IND, GO TO C-BUSCA-PARTIDA ELSE
                MOVE " " TO RESPUESTA,
-               DISPLAY "NO EXISTE UNA PARTIDA EN {AMP-P} CON ESOS DATOS "
+               DISPLAY "NO EXISTE UNA PARTIDA EN {AMP-P} CON ESOS DATOS
       -                "! " LINE 24 BLINK ERASE EOL,
-      *        ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
-      *        MOVE "!" TO RESPUESTA,   
-      *         PERFORM DISP-SPACES
+               ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
+               PERFORM DISP-SPACES
                IF RESPUESTA NOT = "!"
                    GO TO DETERMINA-RUTINA.
            IF CANTIDAD-TRN < CNT-PART-AMP-P(IND),
@@ -2430,14 +2364,14 @@ KKKKKK          MOVE LOW-VALUES TO FALTA-PROV-TMP-AMP.
               PERFORM DETERMINA-FECHA.
            MOVE FECHA TO FECHA-DIA, FECHA-COMP-ANT. PERFORM RUT-FECHA.
            MOVE FECHA TO TFEC-1, TFEC42.
-      *      IF HORA-MINUTO < 0600,
-      *         DISPLAY "ATENCION:"         LINE    24 BLINK REVERSE,
-      *                 " Dada la Hora de la Maquina, Tomo la Fecha:"
-      *                                     POSITION 0,
-      *                 TFEC-1              POSITION 0 REVERSE,
-      *                 " para Trabajar ! " POSITION 0 ERASE EOL,
-      *        ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW BLINK;
-      *               ON EXCEPTION EXC GO TO EXIT-PROGRAM.
+           IF HORA-MINUTO < 0600,
+              DISPLAY "ATENCION:"         LINE    24 BLINK REVERSE,
+                      " Dada la Hora de la Maquina, Tomo la Fecha:"
+                                          POSITION 0,
+                      TFEC-1              POSITION 0 REVERSE,
+                      " para Trabajar ! " POSITION 0 ERASE EOL,
+              ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW BLINK;
+                     ON EXCEPTION EXC GO TO EXIT-PROGRAM.
        ABRE-ARCHIVOS.
 190892     OPEN I-O TRNAMP.
 190892     IF STATUS-TRNAMP NOT = "00",
@@ -2445,8 +2379,7 @@ KKKKKK          MOVE LOW-VALUES TO FALTA-PROV-TMP-AMP.
 190892                 LINE    24 BLINK REVERSE,
 190892                " Se est n Emitiendo los Listados Finales ..."
 190892                 POSITION 0 ERASE EOL,
-190892*       ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW BLINK,
-MCM           MOVE 0 TO RESPUESTA, 
+190892        ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW BLINK,
 190892        GO TO EXIT-PROGRAM.
 261193 ABRE-PEDIDO.
            OPEN I-O PEDIDO.
@@ -2564,11 +2497,9 @@ MCM           MOVE 0 TO RESPUESTA,
               CLOSE LO WITH NO REWIND,
               MOVE "C" TO PERMISO-LINK,
               PERFORM CONTROLA-IMPRESORA.
-MCM   *     ACCEPT TRN LINE 1 POSITION 45 PROMPT "x" ECHO NO BEEP;       "
-      *            ON EXCEPTION EXC MOVE "FI" TO TRN.
-MCM        MOVE "+2" TO TRN.
-           
-      *     PERFORM DISP-SPACES.
+           ACCEPT TRN LINE 1 POSITION 45 PROMPT "x" ECHO NO BEEP;
+                  ON EXCEPTION EXC MOVE "FI" TO TRN.
+           PERFORM DISP-SPACES.
 290993     IF TRN = "FI" GO TO FIN-PROGRAMA.
            DISPLAY SPACES LINE 3 POSITION 50 SIZE 02,
                    SPACES LINE 8 POSITION 26 SIZE 29,
@@ -2578,39 +2509,38 @@ MCM        MOVE "+2" TO TRN.
            IF TRN = SPACES MOVE TRN-ANT TO TRN.
            MOVE TRN TO TRN-ANT.
            DISPLAY TRN       LINE  1 POSITION 45,
-                   " Costo " LINE 20 POSITION 18 LOW REVERSE.			"
+                   " Costo " LINE 20 POSITION 18 LOW REVERSE.
 
 
       *-------------------
       
-040708*     IF (TRN NOT < "E0" AND TRN NOT > "E9") OR
-040708*        (TRN NOT < "+1" AND TRN NOT > "+5")
-040708*        DISPLAY "clave : " LINE 24 POSITION 65 
-040708*        ACCEPT WK-CLAVE PROMPT "*" OFF NO BEEP  
-040708*               POSITION 0 ERASE EOL
-040708*               ON EXCEPTION EXC MOVE SPACES TO WK-CLAVE.
-040708*     
-040708*     IF ( (TRN NOT < "E0" AND TRN NOT > "E9") OR
-040708*          (TRN NOT < "+1" AND TRN NOT > "+5") ) AND
-040708*         WK-CLAVE NOT = "ArrI"  GO TO FIN-PROGRAMA.
-MCM         MOVE "ArrI" TO WK-CLAVE. 
+040708     IF (TRN NOT < "E0" AND TRN NOT > "E9") OR
+040708        (TRN NOT < "+1" AND TRN NOT > "+5")
+040708        DISPLAY "clave : " LINE 24 POSITION 65 
+040708        ACCEPT WK-CLAVE PROMPT "*" OFF NO BEEP  
+040708               POSITION 0 ERASE EOL
+040708               ON EXCEPTION EXC MOVE SPACES TO WK-CLAVE.
+040708     
+040708     IF ( (TRN NOT < "E0" AND TRN NOT > "E9") OR
+040708          (TRN NOT < "+1" AND TRN NOT > "+5") ) AND
+040708         WK-CLAVE NOT = "ArrI"  GO TO FIN-PROGRAMA.
       
       
       *-------------------
 
 
 
-060905*     IF (TRN NOT < "S0" AND TRN NOT > "S9") OR
-060905*        (TRN NOT < "-1" AND TRN NOT > "-5")
-060905*        DISPLAY "clave : " LINE 24 POSITION 65 
-      *        ACCEPT WK-CLAVE PROMPT "*" OFF NO BEEP  
-      *               POSITION 0 ERASE EOL
-      *               ON EXCEPTION EXC MOVE SPACES TO WK-CLAVE.
-      *     
-060905*     IF ((TRN NOT < "S0" AND TRN NOT > "S9")  OR
-060905*         (TRN NOT < "-1" AND TRN NOT > "-5")) AND
-      *          TRN NOT = "S8" AND 
-      *         WK-CLAVE NOT = "SWAT"  GO TO FIN-PROGRAMA.
+060905     IF (TRN NOT < "S0" AND TRN NOT > "S9") OR
+060905        (TRN NOT < "-1" AND TRN NOT > "-5")
+060905        DISPLAY "clave : " LINE 24 POSITION 65 
+              ACCEPT WK-CLAVE PROMPT "*" OFF NO BEEP  
+                     POSITION 0 ERASE EOL
+                     ON EXCEPTION EXC MOVE SPACES TO WK-CLAVE.
+           
+060905     IF ((TRN NOT < "S0" AND TRN NOT > "S9")  OR
+060905         (TRN NOT < "-1" AND TRN NOT > "-5")) AND
+                TRN NOT = "S8" AND 
+               WK-CLAVE NOT = "SWAT"  GO TO FIN-PROGRAMA.
 
 
 060905     IF  TRN = "S8" AND
@@ -2640,7 +2570,6 @@ MCM         MOVE "ArrI" TO WK-CLAVE.
            DISPLAY "*****úPROGRAMA {MOV-AMP} FINALIZADOú*****"
                     LINE 12 POSITION 20 ERASE BLINK REVERSE.
        EXIT-PROGRAM.
-           close log.
            EXIT PROGRAM.
        STOP-RUN.
            STOP RUN.
@@ -2695,25 +2624,21 @@ MCM         MOVE "ArrI" TO WK-CLAVE.
 210797     MOVE LOW-VALUES TO REG-FACPRV.
            DISPLAY "Ingrese el Codigo del Operador (Su Codigo) ..."
                     LINE 24 LOW BLINK ERASE EOL.
-      *     ACCEPT OPERADORA LINE 2 POSITION 39 PROMPT "x" ECHO NO BEEP;
-      *            ON EXCEPTION EXC GO TO PIDE-TRN. 
-MCM        MOVE "06" TO OPERADORA
-MOVE  *CUIDADO
-      *     PERFORM DISP-SPACES.
+           ACCEPT OPERADORA LINE 2 POSITION 39 PROMPT "x" ECHO NO BEEP;
+                  ON EXCEPTION EXC GO TO PIDE-TRN. 
+           PERFORM DISP-SPACES.
            IF OPERADORA = SPACES,
               IF OPERADORA-ANT = SPACES,
                  GO TO PIDE-OPERADORA ELSE
                  MOVE OPERADORA-ANT TO OPERADORA,
                  DISPLAY OPERADORA LINE 2 POSITION 39.
            MOVE OPERADORA TO OPERADORA-ANT.
-       PIDE-FECHA-CARGA.												"
+       PIDE-FECHA-CARGA.
            ACCEPT FECHAUXR FROM DATE.
            DISPLAY "Ingrese la Fecha de CARGA del Comprobante ..."
                     LINE 24 LOW BLINK ERASE EOL.
            MOVE "034706" TO LIN-POS-SIZ.
-MCM   *     PERFORM ENTRA-FECHA THRU SAL-ENTRA-FECHA.
-MCM        MOVE FECHA-SP(3:) TO FECHA.
-MCM        MOVE ZEROS        TO BAND.          
+           PERFORM ENTRA-FECHA THRU SAL-ENTRA-FECHA.
 270594     IF BAND NOT = ZERO,
                DISPLAY "ÍÍÍ" LINE 2 POSITION 50 LOW,
                GO TO PIDE-OPERADORA.
@@ -2735,7 +2660,6 @@ MCM        MOVE ZEROS        TO BAND.
        P-COD-SUC.
 
 280103*----Solo pregunta por la sucursal si es Remito.
-      *ACA SE TIENE QUE IR
            IF TRN NOT = "RM" AND TRN NOT = "AR"
                MOVE 01 TO SUCURSAL-ANT,
                GO TO P-C-S.
@@ -2753,9 +2677,8 @@ MCM        MOVE ZEROS        TO BAND.
            IF NUMERO = 04 AND (TRN-ANT NOT = "RM"
                                AND TRN-ANT NOT = "AR")
               DISPLAY " SOLAMENTE APLICABLE AL DEPOSITO PRINCIPAL: {01}
-      -              "!"     LINE 24 POSITION 1 BLINK ERASE EOL,        
-      *     ACCEPT RESPUESTA POSITION 0,
-            MOVE 0 TO RESPUESTA
+      -              "!"     LINE 24 POSITION 1 BLINK ERASE EOL,
+              ACCEPT RESPUESTA POSITION 0,
               GO TO PIDE-COD-SUC.
 
 
@@ -2800,11 +2723,7 @@ MCM        MOVE ZEROS        TO BAND.
                           POSITION 0 LOW ERASE EOL.
        P-COD-PROV.
            MOVE "044704" TO LIN-POS-SIZ.
-      *      PERFORM CONTROL-NUMERO.
-      *VERIFICAR NUMERO DE PROVEEDOR SI ES IGUAL AL NUMERO DEL CLIENTE??
-           MOVE CODIGO-CLIENTE TO NUMERO.
-MCM   *     ACCEPT RESPUESTA.
-MCM        MOVE ZEROS TO BAND.             
+           PERFORM CONTROL-NUMERO.
 270594     IF BAND NOT = ZEROES,
               CLOSE PROV,
 140794        DISPLAY SPACES LINE 4 POSITION 51 SIZE 4,
@@ -2823,17 +2742,10 @@ MCM        MOVE ZEROS TO BAND.
 010704     MOVE NUMERO TO COD-PROV-VENCIM WK-DISTRIBUIDOR.
            DISPLAY COD-PROV-ANT LINE 4 POSITION 47.
        LEE-PROV.
-ser        if deb = 1  
-ser           move "LEE-PROV" to MENSAJE-LOG
-ser           write reg-log
-ser        end-if.
-
            READ PROV RECORD WITH NO LOCK;
                 INVALID KEY
                 DISPLAY "NO EXISTE ESE PROVEEDOR !" LINE 24 BLINK BEEP,
-MCM   *GRABAR ERROR
-      *          GO TO P-COD-PROV.
-MCM             CONTINUE.
+                GO TO P-COD-PROV.
            IF STATUS-PROV = "99" GO TO LEE-PROV.
            DISPLAY RAZON-SOCIAL LINE 24 1 REVERSE.
            PERFORM CONFIRMA.
@@ -2876,10 +2788,7 @@ MCM             CONTINUE.
            DISPLAY "Ingrese la Fecha del Comprobante ..."
                     LINE 24 LOW BLINK ERASE EOL.
            MOVE "054706" TO LIN-POS-SIZ.
-MCM   *    PERFORM ENTRA-FECHA THRU SAL-ENTRA-FECHA.
-MCM        MOVE FECHA-SP(3:) TO FECHA.
-MCM        MOVE ZEROS        TO BAND.          
-
+           PERFORM ENTRA-FECHA THRU SAL-ENTRA-FECHA.
 270594     IF BAND NOT = ZERO
 KKKKKK            MOVE ZEROES TO FECHA
                   GO TO ABRE-PROV.
@@ -2912,10 +2821,7 @@ IVA19      IF RFECHA-COMPLETA > 20021117 AND RFECHA-COMPLETA < 20030118
            DISPLAY "Ingrese el Numero del Comprobante ..."
                     LINE 24 LOW BLINK ERASE EOL.
            MOVE "064706" TO LIN-POS-SIZ.
-           
-      *     PERFORM CONTROL-NUMERO.
-           MOVE COMPROBANTE-FACTURA TO NUMERO.
-           MOVE ZEROS               TO BAND.
+           PERFORM CONTROL-NUMERO.
            IF BAND NOT = ZERO GO TO PIDE-FECHA-COMP.
            IF NUMERO   = ZERO,
               IF NRO-COMP-ANT NOT > ZEROES GO TO PIDE-NRO-COMP ELSE
@@ -2930,10 +2836,8 @@ IVA19      IF RFECHA-COMPLETA > 20021117 AND RFECHA-COMPLETA < 20030118
            IF WK-ESTA-VTO = "S"
               DISPLAY " Factura con vencimiento asignado en Proveedores 
       -               "-- Confirmar con TESORERIA -- "
-                      LINE 24 POSITION 01 REVERSE BLINK,                "
-      *      ACCEPT RESPUESTA,
-      *PONER MENSAJE DE ERROR
-              MOVE "*" TO RESPUESTA,
+                      LINE 24 POSITION 01 REVERSE BLINK,
+              ACCEPT RESPUESTA,
               IF RESPUESTA NOT = "*"
                  GO TO FIN-PROGRAMA.
 
@@ -2948,13 +2852,11 @@ IVA19      IF RFECHA-COMPLETA > 20021117 AND RFECHA-COMPLETA < 20030118
        PIDE-PROCEDENCIA-FACTURA.
            DISPLAY "Ingres¢ el Remito ?   (Si/No)"
                                 LINE  9 POSITION 26 LOW REVERSE,
-                   "Indique si ha Ingresado un Remito Previo para esta F"
+                   "Indique si ha Ingresado un Remito Previo para esta F
       -            "actura ..." LINE 24 POSITION  1 LOW BLINK ERASE EOL.
-      *     ACCEPT RESP-REMITO LINE 9 POSITION 46 PROMPT "*" NO BEEP;
-      *            ON EXCEPTION EXC GO TO PIDE-NRO-COMP.
-           MOVE "s" TO RESP-REMITO.
-           
-      *     PERFORM DISP-SPACES.
+           ACCEPT RESP-REMITO LINE 9 POSITION 46 PROMPT "*" NO BEEP;
+                  ON EXCEPTION EXC GO TO PIDE-NRO-COMP.
+           PERFORM DISP-SPACES.
            IF RESP-REMITO = "0",
               MOVE "S" TO RESP-REMITO,
               DISPLAY RESP-REMITO LINE 9 POSITION 46.
@@ -3032,8 +2934,7 @@ IVA19      IF RFECHA-COMPLETA > 20021117 AND RFECHA-COMPLETA < 20030118
        PIDE-MODO-CARGA.
            DISPLAY "Unidad/Bulto:    (U/B) "
                       LINE 11 POSITION 26 LOW REVERSE.
-MCM   *     ACCEPT MODO-CARGA LINE 11 POSITION 41 PROMPT "*" NO BEEP.
-           MOVE SPACES TO MODO-CARGA.  
+           ACCEPT MODO-CARGA LINE 11 POSITION 41 PROMPT "*" NO BEEP.
            IF MODO-CARGA = SPACES
                 MOVE "U" TO MODO-CARGA.
            DISPLAY MODO-CARGA LINE 11 POSITION 41.
@@ -3090,12 +2991,10 @@ MCM   *     ACCEPT MODO-CARGA LINE 11 POSITION 41 PROMPT "*" NO BEEP.
                    "D"               POSITION 0 HIGH,
                    "}úp/Nombre:{"    POSITION 0 LOW,
                    "N"               POSITION 0 HIGH,
-                   "}"               POSITION 0 LOW.                    "
-      *     ACCEPT RESPUESTA LINE 24 POSITION 9 PROMPT "*" NO BEEP BLINK;
-      *            ON EXCEPTION EXC GO TO PIDE-NRO-COMP.
-      *ITERAR CUIDADO !!!!!!!
-           MOVE "C" TO RESPUESTA.
-      *     PERFORM DISP-SPACES.
+                   "}"               POSITION 0 LOW.
+           ACCEPT RESPUESTA LINE 24 POSITION 9 PROMPT "*" NO BEEP BLINK;
+                  ON EXCEPTION EXC GO TO PIDE-NRO-COMP.
+           PERFORM DISP-SPACES.
            IF RESPUESTA = SPACES MOVE ACCESO    TO RESPUESTA ELSE
                                  MOVE RESPUESTA TO ACCESO.
            IF ACCESO = "C" DISPLAY "Codigo" LINE 7 POSITION 46,
@@ -3137,7 +3036,7 @@ MCM   *     ACCEPT MODO-CARGA LINE 11 POSITION 41 PROMPT "*" NO BEEP.
                  INVALID KEY
                  DISPLAY "NO HAY PRODUCTOS PARA ESE PROVEEDOR ! "
                           LINE 24 BLINK ERASE EOL,
-      *            ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
+                 ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
                  GO TO PIDE-ACCESO.
            GO TO DETERMINA-RUTINA.
        POSICIONA-LINEA.
@@ -3146,7 +3045,7 @@ MCM   *     ACCEPT MODO-CARGA LINE 11 POSITION 41 PROMPT "*" NO BEEP.
                  INVALID KEY
                  DISPLAY "NO HAY PRODUCTOS PARA ESE PROVEEDOR ! "
                           LINE 24 BLINK ERASE EOL,
-      *            ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
+                 ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
                  GO TO PIDE-ACCESO.
            GO TO DETERMINA-RUTINA.
        POSICIONA-TROQUEL.
@@ -3154,7 +3053,7 @@ MCM   *     ACCEPT MODO-CARGA LINE 11 POSITION 41 PROMPT "*" NO BEEP.
                  INVALID KEY
                  DISPLAY "NO EXISTE UN PRODUCTO CON CODIGO PARECIDO ! "
                           LINE 24 BLINK ERASE EOL,
-      *           ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
+                 ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
                  GO TO PIDE-ACCESO.
            GO TO DETERMINA-RUTINA.
        POSICIONA-NOMBRE.
@@ -3162,7 +3061,7 @@ MCM   *     ACCEPT MODO-CARGA LINE 11 POSITION 41 PROMPT "*" NO BEEP.
                  INVALID KEY
                  DISPLAY "NO HAY PRODUCTOS CON NOMBRE PARECIDO ! "
                           LINE 24 BLINK ERASE EOL,
-      *           ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
+                 ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW,
                  GO TO PIDE-ACCESO.
            GO TO DETERMINA-RUTINA.
 
@@ -3227,12 +3126,12 @@ MCM   *     ACCEPT MODO-CARGA LINE 11 POSITION 41 PROMPT "*" NO BEEP.
                                   LINE    24 LOW REVERSE BLINK,
                          " (No hay Existencias Suficientes) "
                                   POSITION 0 ERASE EOL,
-      *          ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW BLINK,
+                 ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW BLINK,
                  GO TO RUT-NS ELSE
 200494           ADD INTERMEDIO              TO CANTIDAD-TRN.
            MOVE EXISTENCIA-SUC(SUCURSAL-ANT) TO NUM-MENS.
            MOVE "Existencia Total Divisi¢n"  TO MENSAJE.
-      *     PERFORM DISP-MENSAJE-ERROR.
+           PERFORM DISP-MENSAJE-ERROR.
            MOVE INTERMEDIO           TO  EXISTENCIA-SUC(SUCURSAL-ANT).
            IF TRN-ANT = "TR",
               MOVE A-SUCURSAL        TO  A-SUCURSAL-TRN,
@@ -3257,10 +3156,9 @@ MCM   *     ACCEPT MODO-CARGA LINE 11 POSITION 41 PROMPT "*" NO BEEP.
                    "/"  POSITION 0 LOW,
                    "N"  POSITION 0 HIGH,
                    ") " POSITION 0 LOW ERASE EOL.
-      *      ACCEPT RESPUESTA POSITION 0 PROMPT "*" BLINK NO BEEP;
-      *            ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
-           MOVE "S" TO RESPUESTA.
-      *     PERFORM DISP-SPACES.
+           ACCEPT RESPUESTA POSITION 0 PROMPT "*" BLINK NO BEEP;
+                  ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
+           PERFORM DISP-SPACES.
            IF NEGATIVO       GO TO FIN-RUT-NS.
            IF NOT AFIRMATIVO GO TO PREG-COMPRADA.
 060395 ACT-COMPR-NS.
@@ -3268,7 +3166,7 @@ MCM   *     ACCEPT MODO-CARGA LINE 11 POSITION 41 PROMPT "*" NO BEEP.
 300997                           GIVING INTERMEDIO.
            MOVE "Acumulado Compras del Mes" TO MENSAJE.
 300997     MOVE CANT-COMPRADA-MES(MES-NUE)  TO NUM-MENS.
-      *     PERFORM DISP-MENSAJE-ERROR.
+           PERFORM DISP-MENSAJE-ERROR.
 300997     MOVE INTERMEDIO TO CANT-COMPRADA-MES(MES-NUE).
        FIN-RUT-NS.
            PERFORM ARMA-TRNAMP.
@@ -3330,31 +3228,30 @@ MEL   * q tome el vencimiento cargado
                    "/"  POSITION 0 LOW,
                    "N"  POSITION 0 HIGH,
                    ") " POSITION 0 LOW ERASE EOL.
-      *      ACCEPT RESPUESTA POSITION 0 PROMPT "*" BLINK NO BEEP;
-      *            ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
-           MOVE "S" TO RESPUESTA.
-      *     PERFORM DISP-SPACES.
+           ACCEPT RESPUESTA POSITION 0 PROMPT "*" BLINK NO BEEP;
+                  ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
+           PERFORM DISP-SPACES.
            IF NEGATIVO       GO TO FIN-RUT-NE.
            IF NOT AFIRMATIVO GO TO PREG-DEVOLUCION.
            SUBTRACT CANTIDAD-TRN         FROM   TOTAL-ACUM-HISTORICO
                                          GIVING INTERMEDIO.
            MOVE "Acumulado Hist¢rico Ventas" TO MENSAJE.
            MOVE TOTAL-ACUM-HISTORICO         TO NUM-MENS.
-      *     PERFORM DISP-MENSAJE-ERROR.
+           PERFORM DISP-MENSAJE-ERROR.
            MOVE INTERMEDIO                   TO TOTAL-ACUM-HISTORICO.
            SUBTRACT CANTIDAD-TRN         FROM   TOTAL-ACUM-SUC
                                                 (SUCURSAL-ANT)
                                          GIVING INTERMEDIO.
            MOVE "Acumulado General Ventas"   TO MENSAJE.
            MOVE TOTAL-ACUM-SUC(SUCURSAL-ANT) TO NUM-MENS.
-      *     PERFORM DISP-MENSAJE-ERROR.
+           PERFORM DISP-MENSAJE-ERROR.
            MOVE INTERMEDIO                   TO TOTAL-ACUM-SUC
                                                 (SUCURSAL-ANT).
            SUBTRACT CANTIDAD-TRN FROM CANT-VENDIDA-MES(MES-ANT)
                                          GIVING INTERMEDIO.
            MOVE "Acumulado Ventas del Mes"   TO MENSAJE.
            MOVE CANT-VENDIDA-MES(MES-ANT)    TO NUM-MENS.
-      *    PERFORM DISP-MENSAJE-ERROR.
+           PERFORM DISP-MENSAJE-ERROR.
            MOVE INTERMEDIO TO CANT-VENDIDA-MES(MES-ANT).
            SUBTRACT CANTIDAD-TRN         FROM   VENDIDA-SUC
                                                 (SUCURSAL-ANT)
@@ -3670,10 +3567,9 @@ MEL   * q tome el vencimiento cargado
                    "("                     POSITION 0 LOW,
 130994             "!"                     POSITION 0 BLINK,
                    "/N) "                  POSITION 0 LOW ERASE EOL.
-      *      ACCEPT RESPUESTA POSITION 0 PROMPT "?" BLINK NO BEEP;
-      *            ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
-           MOVE "S" TO RESPUESTA.       
-      *     PERFORM DISP-SPACES.
+           ACCEPT RESPUESTA POSITION 0 PROMPT "?" BLINK NO BEEP;
+                  ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
+           PERFORM DISP-SPACES.
            IF RESPUESTA = "!" GO TO SAL-BUSQUEDA-PARTIDA.
            IF NOT NEGATIVO    GO TO ENCONTRO-PARTIDA.
        INCR-BUSQUEDA-PARTIDA.
@@ -3682,7 +3578,7 @@ MEL   * q tome el vencimiento cargado
            DISPLAY "NO EXISTE UNA PARTIDA CON ESOS DATOS ! "
                     LINE 24 BLINK ERASE EOL.
            ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW.
-      *      PERFORM DISP-SPACES.
+           PERFORM DISP-SPACES.
        SAL-BUSQUEDA-PARTIDA.
 
 250794 BUSQUEDA-PARTIDA-IOMA SECTION 70.
@@ -3718,10 +3614,9 @@ MEL   * q tome el vencimiento cargado
                    "("                     POSITION 0 LOW,
 130994             "!"                     POSITION 0 BLINK,
                    "/N) "                  POSITION 0 LOW ERASE EOL.
-      *     ACCEPT RESPUESTA POSITION 0 PROMPT "?" BLINK NO BEEP;
-      *            ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
-           MOVE "S" TO RESPUESTA.
-      *     PERFORM DISP-SPACES.
+           ACCEPT RESPUESTA POSITION 0 PROMPT "?" BLINK NO BEEP;
+                  ON EXCEPTION EXC MOVE "N" TO RESPUESTA.
+           PERFORM DISP-SPACES.
            IF RESPUESTA = "!" GO TO SAL-BUSQUEDA-PARTIDA-IOMA.
            IF NOT NEGATIVO    GO TO ENCONTRO-PARTIDA-IOMA.
        INCR-BUSQUEDA-PARTIDA-IOMA.
@@ -3729,8 +3624,8 @@ MEL   * q tome el vencimiento cargado
            IF IND-P NOT > 5 GO TO CICLO-BUSQUEDA-PARTIDA-IOMA.
            DISPLAY "NO EXISTE UNA PARTIDA IOMA CON ESOS DATOS ! "
                     LINE 24 BLINK ERASE EOL.
-      *      ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW.
-      *     PERFORM DISP-SPACES.
+           ACCEPT RESPUESTA POSITION 0 PROMPT "¯" LOW.
+           PERFORM DISP-SPACES.
        SAL-BUSQUEDA-PARTIDA-IOMA.
 
        BORRA-PARTIDA-IOMA SECTION 70.
@@ -3786,4 +3681,3 @@ MEL   * q tome el vencimiento cargado
 
 
        END PROGRAM.
-
